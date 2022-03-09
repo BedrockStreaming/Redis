@@ -9,6 +9,7 @@ class CacheTest extends Cache
 {
     /**
      * nophpdoc
+     *
      * @param int $key clé
      *
      * @return int

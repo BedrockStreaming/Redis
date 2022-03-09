@@ -6,19 +6,13 @@ use Predis;
 
 /**
  * Class PredisProxy
- *
- * @package M6Web\Component\Redis
  */
 class PredisProxy
 {
-    /**
-     * @var Predis\Client
-     */
+    /** @var Predis\Client */
     protected $predis;
 
-    /**
-     * @var int
-     */
+    /** @var int */
     protected $maxConnectionLostAllowed = 0;
 
     /**
@@ -44,7 +38,7 @@ class PredisProxy
     }
 
     /**
-     * @param integer $v
+     * @param int $v
      *
      * @return $this
      */
@@ -60,6 +54,7 @@ class PredisProxy
      * @param array  $arguments
      *
      * @return mixed
+     *
      * @throws Predis\Connection\ConnectionException
      * @throws \Exception
      */
@@ -75,7 +70,7 @@ class PredisProxy
 
         do {
             try {
-                return call_user_func_array(array($this->predis, $name), $arguments);
+                return call_user_func_array([$this->predis, $name], $arguments);
             } catch (Predis\Connection\ConnectionException $e) {
                 // try to re-connect
                 $lastException = $e;

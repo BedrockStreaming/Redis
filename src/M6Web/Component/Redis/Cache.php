@@ -7,6 +7,7 @@
  *
  * @author Olivier Mansour
  */
+
 namespace M6Web\Component\Redis;
 
 use Predis;
@@ -17,10 +18,11 @@ use Predis;
  */
 class Cache extends Manager
 {
-    const CACHE = 0; // dbname will always be 0
+    public const CACHE = 0; // dbname will always be 0
 
     /**
      * namespace used to prefix keys
+     *
      * @var string
      */
     protected $namespace = null;
@@ -28,18 +30,21 @@ class Cache extends Manager
     /**
      * using the multi feature (see redis.io) we will store set and get since exec is called
      * when exec is called, set and get are dispatched between servers during multiple transactions
-     * @var boolean
+     *
+     * @var bool
      */
     protected $multi = false;
 
     /**
      * list of closures executed in multi mode
+     *
      * @var array
      */
-    protected $execList = array();
+    protected $execList = [];
 
     /**
      * class constructor
+     *
      * @param array $params Manager parameters
      *
      * @throws Exception
@@ -47,7 +52,7 @@ class Cache extends Manager
     public function __construct($params)
     {
         if (!isset($params['namespace'])) {
-            throw new Exception("Le parametre namespace est obligatoire");
+            throw new Exception('Le parametre namespace est obligatoire');
         }
         $this->setNamespace($params['namespace']);
         parent::__construct($params);
@@ -56,15 +61,17 @@ class Cache extends Manager
 
     /**
      * set the namespace
+     *
      * @param string $v namespace (sort of)
      */
     public function setNamespace($v)
     {
-        $this->namespace =  str_replace(array('\\', '?', '*', '[', ']', ':'), '', (string) $v).':';
+        $this->namespace = str_replace(['\\', '?', '*', '[', ']', ':'], '', (string) $v).':';
     }
 
     /**
      * get the namespace
+     *
      * @return string
      */
     public function getNamespace()
@@ -74,6 +81,7 @@ class Cache extends Manager
 
     /**
      * get a value from the cache
+     *
      * @param string $key clé
      *
      * @return mixed|null Null if no value available
@@ -83,7 +91,7 @@ class Cache extends Manager
         $redis = $this->getRedis($key);
         $start = microtime(true);
         $ret = $redis->get($this->getPatternKey().$key); // ajout du pattern
-        $this->notifyEvent('get', array($this->getPatternKey().$key), microtime(true) - $start);
+        $this->notifyEvent('get', [$this->getPatternKey().$key], microtime(true) - $start);
         if ($ret and $this->getCompress()) {
             return self::uncompress($ret);
         } else {
@@ -96,14 +104,14 @@ class Cache extends Manager
      *
      * @param array $keys array of keys
      *
-     * @return integer
+     * @return int
      */
     public function del($keys)
     {
         if (!is_array($keys)) {
-            $keys = array($keys);
+            $keys = [$keys];
         }
-        $funcs = array();
+        $funcs = [];
 
         // séparation en serveur
         foreach ($keys as $key) {
@@ -112,7 +120,7 @@ class Cache extends Manager
                 $start = microtime(true);
                 $count = $redis->del($keyP);
                 if ((is_int($count)) and ($count > 0)) {
-                    $this->notifyEvent('del', array($keyP), microtime(true) - $start);
+                    $this->notifyEvent('del', [$keyP], microtime(true) - $start);
                 }
 
                 return $count;
@@ -120,7 +128,7 @@ class Cache extends Manager
         }
 
         if (true === $this->multi) {
-            //throw new Exception("not implemented yet");
+            // throw new Exception("not implemented yet");
             foreach ($funcs as $k => $func) {
                 $this->addToExecList($k, $func);
             }
@@ -139,9 +147,9 @@ class Cache extends Manager
     /**
      * set a value
      *
-     * @param string  $key   la clé
-     * @param string  $value valeur
-     * @param integer $ttl   time to live
+     * @param string $key   la clé
+     * @param string $value valeur
+     * @param int    $ttl   time to live
      *
      * @return Cache
      */
@@ -157,7 +165,7 @@ class Cache extends Manager
             $func = function ($redis) use ($keyP, $value) {
                 $start = microtime(true);
                 $redis->set($keyP, $value);
-                $this->notifyEvent('set', array($keyP, $value), microtime(true) - $start);
+                $this->notifyEvent('set', [$keyP, $value], microtime(true) - $start);
 
                 return $redis;
             };
@@ -165,7 +173,7 @@ class Cache extends Manager
             $func = function ($redis) use ($keyP, $value, $ttl) {
                 $start = microtime(true);
                 $redis->setex($keyP, $ttl, $value);
-                $this->notifyEvent('setex', array($keyP, $ttl, $value), microtime(true) - $start);
+                $this->notifyEvent('setex', [$keyP, $ttl, $value], microtime(true) - $start);
 
                 return $redis;
             };
@@ -180,21 +188,20 @@ class Cache extends Manager
         return $this;
     }
 
-
     /**
      * check if a key exist
      *
      * @param string $key clé
      *
-     * @return boolean
+     * @return bool
      */
     public function exists($key)
     {
         $start = microtime(true);
         $ret = $this->getRedis($key)->exists($this->getPatternKey().$key);
-        $this->notifyEvent('exists', array($this->getPatternKey().$key), microtime(true) - $start);
+        $this->notifyEvent('exists', [$this->getPatternKey().$key], microtime(true) - $start);
 
-        return (boolean) $ret;
+        return (bool) $ret;
     }
 
     /**
@@ -207,23 +214,24 @@ class Cache extends Manager
     public function type($key)
     {
         $start = microtime(true);
-        $ret = (string)$this->getRedis($key)->type($this->getPatternKey().$key);
-        $this->notifyEvent('type', array($this->getPatternKey().$key), microtime(true) - $start);
+        $ret = (string) $this->getRedis($key)->type($this->getPatternKey().$key);
+        $this->notifyEvent('type', [$this->getPatternKey().$key], microtime(true) - $start);
 
         return $ret;
     }
 
     /**
      * return a key ttl
+     *
      * @param string $key clé
      *
-     * @return integer
+     * @return int
      */
     public function ttl($key)
     {
         $start = microtime(true);
         $ret = $this->getRedis($key)->ttl($this->getPatternKey().$key);
-        $this->notifyEvent('ttl', array($this->getPatternKey().$key), microtime(true) - $start);
+        $this->notifyEvent('ttl', [$this->getPatternKey().$key], microtime(true) - $start);
 
         return $ret;
     }
@@ -231,10 +239,11 @@ class Cache extends Manager
     /**
      * increment a value (incr)
      *
-     * @param string  $key  la clé
-     * @param integer $incr valeur
+     * @param string $key  la clé
+     * @param int    $incr valeur
      *
      * @throws Exception
+     *
      * @return int
      */
     public function incr($key, $incr = 1)
@@ -244,7 +253,7 @@ class Cache extends Manager
             try {
                 $start = microtime(true);
                 $ret = $redis->incrby($keyP, $incr);
-                $this->notifyEvent('incrby', array($keyP, $incr), microtime(true) - $start);
+                $this->notifyEvent('incrby', [$keyP, $incr], microtime(true) - $start);
 
                 return $ret;
             } catch (Predis\ServerException $e) {
@@ -258,7 +267,7 @@ class Cache extends Manager
             return $this;
         } else {
             if (is_null($ret = $func($this->getRedis($key)))) {
-                throw new Exception("Cant increment key ".$key.", not an integer ?");
+                throw new Exception('Cant increment key '.$key.', not an integer ?');
             }
 
             return $ret;
@@ -268,10 +277,11 @@ class Cache extends Manager
     /**
      * set the key ttl
      *
-     * @param string  $key la clé
-     * @param integer $ttl ttl en seconde
+     * @param string $key la clé
+     * @param int    $ttl ttl en seconde
      *
      * @throws Exception
+     *
      * @return int
      */
     public function expire($key, $ttl)
@@ -285,7 +295,7 @@ class Cache extends Manager
             try {
                 $start = microtime(true);
                 $ret = $redis->expire($keyP, $ttl);
-                $this->notifyEvent('expire', array($keyP, $ttl), microtime(true) - $start);
+                $this->notifyEvent('expire', [$keyP, $ttl], microtime(true) - $start);
 
                 return $ret;
             } catch (Predis\ServerException $e) {
@@ -307,6 +317,7 @@ class Cache extends Manager
 
     /**
      * used the to build the namespace added to the keys
+     *
      * @return string
      */
     public function getPatternKey()
@@ -318,7 +329,8 @@ class Cache extends Manager
      * use for debugging !
      *
      * flush all keys in the namespace
-     * @return integer number of deleted keys
+     *
+     * @return int number of deleted keys
      */
     public function flush()
     {
@@ -331,7 +343,7 @@ class Cache extends Manager
                     $wasDeleted = $redis->del($allKeys);
                 }
 
-                return array($wasDeleted);
+                return [$wasDeleted];
             }
         );
 
@@ -348,7 +360,7 @@ class Cache extends Manager
     public function watch($key)
     {
         $redis = $this->getRedis($key);
-        $this->notifyEvent('watch', array($this->getPatternKey().$key));
+        $this->notifyEvent('watch', [$this->getPatternKey().$key]);
         $redis->watch($this->getPatternKey().$key);
     }
 
@@ -361,13 +373,12 @@ class Cache extends Manager
     {
         return $this->runOnAllRedisServer(
             function ($redis) {
-                $this->notifyEvent('unwatch', array());
+                $this->notifyEvent('unwatch', []);
 
                 return $redis->unwatch();
             }
         );
     }
-
 
     /**
      * allow a transactionnal execution
@@ -377,7 +388,7 @@ class Cache extends Manager
     public function multi()
     {
         $this->multi = true;
-        $this->execList = array(); // purge the execList
+        $this->execList = []; // purge the execList
 
         return $this;
     }
@@ -386,17 +397,18 @@ class Cache extends Manager
      * execute multiple commands
      *
      * @throws Exception
+     *
      * @return array outputs of the commands
      */
     public function exec()
     {
         if (true === $this->multi) {
-            $ret         = array();
+            $ret = [];
             $this->multi = false;
             // exec
             foreach ($this->execList as $todos) {
                 $redis = $todos[0]['redis']; // ^^ not so secure ?
-                $this->notifyEvent('multi', array());
+                $this->notifyEvent('multi', []);
                 $redis->multi();
                 foreach ($todos as $todo) {
                     if ($todo['function'] instanceof \Closure) {
@@ -405,14 +417,14 @@ class Cache extends Manager
                         throw new Exception("Ce n'est pas une Closure !");
                     }
                 }
-                $this->notifyEvent('exec', array());
+                $this->notifyEvent('exec', []);
                 $redis->exec();
             }
-            $this->execList = array(); // purge the execList
+            $this->execList = []; // purge the execList
 
             return $ret;
         } else {
-            throw new Exception("you have to call multi before exec");
+            throw new Exception('you have to call multi before exec');
         }
     }
 
@@ -423,8 +435,8 @@ class Cache extends Manager
      */
     public function discard()
     {
-        $this->multi    = false;
-        $this->execList = array(); // purge the execList
+        $this->multi = false;
+        $this->execList = []; // purge the execList
 
         return $this;
     }
@@ -441,7 +453,7 @@ class Cache extends Manager
 
         return $this->runOnAllRedisServer(
             function ($redis) use ($pattern) {
-                $this->notifyEvent('keys', array($pattern.'*'));
+                $this->notifyEvent('keys', [$pattern.'*']);
 
                 return $redis->keys($pattern.'*'); // toutes les clés commençant par le pattern
             }
@@ -462,7 +474,7 @@ class Cache extends Manager
 
         return $this->runOnAllRedisServer(
             function ($redis) use ($pattern) {
-                $this->notifyEvent('keys', array($pattern));
+                $this->notifyEvent('keys', [$pattern]);
 
                 return $redis->keys($pattern);
             }
@@ -471,13 +483,14 @@ class Cache extends Manager
 
     /**
      * apply a Closure on all the servers
+     *
      * @param \Closure $func anonymous function
      *
      * @return array array of results returned bye redis commands
      */
     protected function runOnAllRedisServer(\Closure $func)
     {
-        $ret = array();
+        $ret = [];
         // loop on all servers
         foreach (array_keys($this->getServerConfig()) as $serverId) {
             if ($redis = $this->getRedisFromServerConfig($serverId)) {
@@ -503,7 +516,7 @@ class Cache extends Manager
         if (is_null($idServer)) {
             $servers = $this->getServerConfig();
 
-            $dbsize = array();
+            $dbsize = [];
             foreach (array_keys($servers) as $idServer) {
                 $redis = $this->getRedisFromServerConfig($idServer);
 
@@ -520,6 +533,7 @@ class Cache extends Manager
 
     /**
      * return info of a server or all
+     *
      * @param string $idServer Id du server
      *
      * @return mixed
@@ -529,7 +543,7 @@ class Cache extends Manager
         if (is_null($idServer)) {
             $servers = $this->getServerConfig();
 
-            $info = array();
+            $info = [];
             foreach (array_keys($servers) as $idServer) {
                 $redis = $this->getRedisFromServerConfig($idServer);
 
@@ -550,12 +564,14 @@ class Cache extends Manager
      * @param string $v de toute façon j'm'en fiche
      *
      * @deprecated
+     *
      * @return object|void
+     *
      * @throws Exception
      */
     public function setCurrentDb($v)
     {
-        throw new Exception("forbidden method in cache mode :".__METHOD__);
+        throw new Exception('forbidden method in cache mode :'.__METHOD__);
     }
 
     /**
@@ -569,10 +585,10 @@ class Cache extends Manager
     protected function addToExecList($key, \Closure $func)
     {
         $redis = $this->getRedis($key);
-        $this->execList[md5(serialize($redis))][] = array(
-            'key'      => $key,
+        $this->execList[md5(serialize($redis))][] = [
+            'key' => $key,
             'function' => $func,
-            'redis'    => $redis
-        );
+            'redis' => $redis,
+        ];
     }
 }

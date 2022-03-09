@@ -7,13 +7,10 @@ use Predis;
 /**
  * Class Multi
  * Allow you to send a unique command on multiple redis
- *
- * @package M6Web\Component\Redis
  */
 class Multi extends Manager
 {
-
-    protected $selectedRedis = array();
+    protected $selectedRedis = [];
 
     protected $multiRedis = false;
 
@@ -28,20 +25,20 @@ class Multi extends Manager
     {
         $this->setCurrentDb(1); // default hardcoded choice for the db
         if (isset($params['compress']) and ($params['compress'] === true)) {
-            throw new Exception("cant use the compress option in this class");
+            throw new Exception('cant use the compress option in this class');
         }
         if (isset($params['namespace'])) {
-            throw new Exception("cant use the namespace option in this class");
+            throw new Exception('cant use the namespace option in this class');
         }
 
         return parent::__construct($params);
     }
 
-
     /**
      * select one random server
      *
      * @throws Exception
+     *
      * @return $this
      */
     public function onOneRandomServer()
@@ -51,7 +48,7 @@ class Multi extends Manager
         do {
             $randServerRank = array_rand($keys);
             if ($redis = $this->getRedisFromServerConfig($keys[$randServerRank])) {
-                $this->selectedRedis = array($keys[$randServerRank] => $redis);
+                $this->selectedRedis = [$keys[$randServerRank] => $redis];
             } else {
                 unset($keys[$randServerRank]);
             }
@@ -72,6 +69,7 @@ class Multi extends Manager
      * @param bool $strict
      *
      * @throws Exception
+     *
      * @return $this
      */
     public function onAllServer($strict = true)
@@ -94,10 +92,11 @@ class Multi extends Manager
     /**
      * select one server
      *
-     * @param string  $idServer
-     * @param boolean $strict
+     * @param string $idServer
+     * @param bool   $strict
      *
      * @throws Exception
+     *
      * @return $this
      */
     public function onOneServer($idServer, $strict = true)
@@ -111,7 +110,7 @@ class Multi extends Manager
                 $this->selectedRedis[$idServer] = $redis;
             } else {
                 if ($strict) {
-                    throw new Exception('cant connect to redis ' . $idServer);
+                    throw new Exception('cant connect to redis '.$idServer);
                 }
             }
         } else {
@@ -129,6 +128,7 @@ class Multi extends Manager
      * @param string $key cache key
      *
      * @return $this
+     *
      * @throws Exception when no redis server available
      */
     public function onOneKeyServer($key)
@@ -146,19 +146,20 @@ class Multi extends Manager
      * @param array  $arguments method arguments
      *
      * @throws Exception
+     *
      * @return mixed
      */
     public function __call($name, $arguments)
     {
         if (empty($this->selectedRedis)) {
-            throw new Exception("please call onOneRandomServer, onOneServer or onAllServer before ".__METHOD__);
+            throw new Exception('please call onOneRandomServer, onOneServer or onAllServer before '.__METHOD__);
         }
 
         // Call to all available servers
         if ($this->multiRedis) {
             $toReturn = [];
             foreach ($this->selectedRedis as $idServer => $redis) {
-                    $toReturn[$idServer] = $this->callRedisCommand($redis, $name, $arguments);
+                $toReturn[$idServer] = $this->callRedisCommand($redis, $name, $arguments);
             }
         } else {
             // Only one server
@@ -166,7 +167,7 @@ class Multi extends Manager
         }
 
         // reinit selected Redis
-        $this->selectedRedis = array();
+        $this->selectedRedis = [];
 
         return $toReturn;
     }
@@ -174,21 +175,21 @@ class Multi extends Manager
     /**
      * call a redis command
      *
-     * @param PredisProxy    $redis
-     * @param string         $name
-     * @param array          $arguments
+     * @param string $name
+     * @param array  $arguments
      *
      * @throws Exception
+     *
      * @return mixed
      */
     protected function callRedisCommand(PredisProxy $redis, $name, $arguments)
     {
         $start = microtime(true);
         try {
-            $return = call_user_func_array(array($redis, $name), $arguments);
+            $return = call_user_func_array([$redis, $name], $arguments);
             $this->notifyEvent($name, $arguments, microtime(true) - $start);
         } catch (Predis\PredisException $e) {
-            throw new Exception("Error calling the method ".$name." : ".$e->getMessage());
+            throw new Exception('Error calling the method '.$name.' : '.$e->getMessage());
         }
 
         return $return;

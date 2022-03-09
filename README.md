@@ -1,5 +1,4 @@
-# component used to access Redis
-
+# component used to access Redis [![Build Status](https://github.com/BedrockStreaming/Redis/actions/workflows/ci.yml/badge.svg)](https://github.com/BedrockStreaming/Redis/actions/workflows/ci.yml) [![Total Downloads](https://poser.pugx.org/m6web/redis/downloads.svg)](https://packagist.org/packages/m6web/redis) [![License](http://poser.pugx.org/m6web/redis/license)](https://packagist.org/packages/m6web/redis) [![PHP Version Require](http://poser.pugx.org/m6web/redis/require/php)](https://packagist.org/packages/m6web/redis)
 
 ## install
 

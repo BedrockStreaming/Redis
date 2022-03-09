@@ -2,6 +2,7 @@
 /**
  * @author o_mansour
  */
+
 namespace M6Web\Component\Redis;
 
 /**

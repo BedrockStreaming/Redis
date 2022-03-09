@@ -14,12 +14,12 @@
         "vendor-dir": "vendor"
     },
     "require": {
-        "php": ">=5.4.0",
+        "php": ">=7.4",
         "predis/predis": "^1.1.1"
     },
     "require-dev": {
-        "atoum/atoum": "@stable",
-        "m6web/symfony2-coding-standard" : "~1.1"
+        "atoum/atoum": "^4.0",
+        "m6web/php-cs-fixer-config": "^2.0"
     },
 	"autoload": {
         "psr-0": { "M6Web\\Component\\Redis": "src/" }

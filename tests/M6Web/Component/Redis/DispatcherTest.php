@@ -6,6 +6,5 @@ class DispatcherTest
 {
     public function dispatch()
     {
-
     }
 }

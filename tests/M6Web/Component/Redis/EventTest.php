@@ -6,17 +6,13 @@ class EventTest
 {
     public function setCommand()
     {
-
     }
 
     public function setArguments()
     {
-
     }
 
     public function setExecutionTime()
     {
-
     }
-
 }

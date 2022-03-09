@@ -3,7 +3,6 @@
  * @author Olivier Mansour
  *
  * strongly depend on predis
- *
  */
 
 namespace M6Web\Component\Redis;
@@ -15,69 +14,79 @@ use Predis;
  */
 abstract class Manager
 {
-
     /**
      * server default timeout
+     *
      * @var float
      */
     protected $timeout = 0.2;
 
     /**
      * read write default timeout
+     *
      * @var float
      */
     protected $read_write_timeout = 0.2;
 
     /**
      * array of server configuration
+     *
      * @var array
      */
     protected $serverConfig = null;
 
     /**
      * array of Redis object
+     *
      * @var array
      */
-    protected $aliveRedis = array();
+    protected $aliveRedis = [];
 
     /**
      * array of Redis object
+     *
      * @var array
      */
-    protected $deadRedis = array();
+    protected $deadRedis = [];
 
     /**
      * db (as redis understand it)
-     * @var integer
+     *
+     * @var int
      */
     protected $currentDb;
 
     /**
      * do I use the compression
+     *
      * @var bool
      */
     private $compress;
 
     /**
      * event dispatcher
-     * @var Object
+     *
+     * @var object
      */
     protected $eventDispatcher = null;
 
     /**
      * class of the event notifier
+     *
      * @var string
      */
     protected $eventClass = null;
 
     /**
      * number of reconnect if a command fail (passed to predisProxy)
+     *
      * @var int
      */
     protected $reconnect = 0;
 
     /**
      * name of the event
+     *
      * @var string
      */
     protected $eventName = 'redis.command';
@@ -104,22 +113,23 @@ abstract class Manager
 
         return $this;
     }
-        
+
     /**
      * set the current db
      *
-     * @param integer $v
+     * @param int $v
      *
      * @throws Exception
+     *
      * @return object DB
      */
     public function setCurrentDb($v)
     {
         if (!is_int($v)) {
-            throw new Exception("please describe the db as an integer ^^");
+            throw new Exception('please describe the db as an integer ^^');
         }
         if ($v == Cache::CACHE) {
-            throw new Exception("cant use ".Cache::CACHE." in class ".__CLASS__);
+            throw new Exception('cant use '.Cache::CACHE.' in class '.__CLASS__);
         }
         $this->currentDb = $v;
 
@@ -128,13 +138,15 @@ abstract class Manager
 
     /**
      * get the current db
+     *
      * @throws Exception
+     *
      * @return string|int
      */
     public function getCurrentDb()
     {
         if (is_null($this->currentDb)) {
-            throw new Exception("currentDb cant be null");
+            throw new Exception('currentDb cant be null');
         }
 
         return $this->currentDb;
@@ -142,6 +154,7 @@ abstract class Manager
 
     /**
      * Notify an event to the event dispatcher
+     *
      * @param string $command   The command name
      * @param array  $arguments args of the command
      * @param int    $time      exec time
@@ -164,16 +177,18 @@ abstract class Manager
 
     /**
      * Set an event dispatcher to notify redis command
-     * @param Object $eventDispatcher The eventDispatcher object, which implement the notify method
+     *
+     * @param object $eventDispatcher The eventDispatcher object, which implement the notify method
      * @param string $eventClass      The event class used to create an event and send it to the event dispatcher
      *
      * @throws Exception
+     *
      * @return \M6Web\Component\Redis\Manager
      */
     public function setEventDispatcher($eventDispatcher, $eventClass)
     {
         if (!is_object($eventDispatcher) || !method_exists($eventDispatcher, 'dispatch')) {
-            throw new Exception("The EventDispatcher must be an object and implement a dispatch method");
+            throw new Exception('The EventDispatcher must be an object and implement a dispatch method');
         }
 
         if (!class_exists($eventClass) ||
@@ -181,21 +196,23 @@ abstract class Manager
             !method_exists($eventClass, 'setArguments') ||
             !method_exists($eventClass, 'setExecutionTime')
             ) {
-            $msg = "The Event class : ".$eventClass." must implement the setCommand, ";
-            $msg .= "setExecutionTime and the setArguments method";
+            $msg = 'The Event class : '.$eventClass.' must implement the setCommand, ';
+            $msg .= 'setExecutionTime and the setArguments method';
             throw new Exception($msg);
         }
         $this->eventDispatcher = $eventDispatcher;
-        $this->eventClass      = $eventClass;
+        $this->eventClass = $eventClass;
 
         return $this;
     }
 
     /**
      * init for the class
+     *
      * @param array $params confg array
      *
      * @throws Exception
+     *
      * @return \M6Web\Component\Redis\Manager
      * @throw Exception
      */
@@ -203,7 +220,7 @@ abstract class Manager
     {
         // check serverConfig
         if (!isset($params['server_config'])) {
-            throw new Exception("parameter serverConfig is mandatory");
+            throw new Exception('parameter serverConfig is mandatory');
         }
 
         ksort($params['server_config']);
@@ -234,6 +251,7 @@ abstract class Manager
 
     /**
      * retourn compress param
+     *
      * @return bool
      */
     public function getCompress()
@@ -243,9 +261,10 @@ abstract class Manager
 
     /**
      * check the server config
+     *
      * @param array $servers host_config
      *
-     * @return boolean
+     * @return bool
      */
     protected function checkServerConfig($servers)
     {
@@ -286,6 +305,7 @@ abstract class Manager
 
     /**
      * get the server info against servernam or all the config
+     *
      * @param int $servername clé
      *
      * @return array
@@ -301,16 +321,18 @@ abstract class Manager
 
     /**
      * set the server config
+     *
      * @param array $servers config
      * @param bool  $check   do I have to check the config
      *
      * @throws Exception
+     *
      * @return \M6Web\Component\Redis\Manager
      */
     protected function setServerConfig($servers, $check = true)
     {
         if ($check and (!self::checkServerConfig($servers))) {
-            throw new Exception("Le parametre serverConfig est mal formé");
+            throw new Exception('Le parametre serverConfig est mal formé');
         }
         // allow set only if the class var is null (one init only)
         if (is_null($this->serverConfig)) {
@@ -322,6 +344,7 @@ abstract class Manager
 
     /**
      * return a server according to the redis key passed
+     *
      * @param string $key     server name
      * @param array  $servers array of servers
      *
@@ -339,10 +362,12 @@ abstract class Manager
 
     /**
      * return a Redis object according to the key
+     *
      * @param string $key     cache key
      * @param array  $servers servers
      *
      * @throws Exception
+     *
      * @return object
      */
     protected function getRedis($key, $servers = null)
@@ -351,12 +376,12 @@ abstract class Manager
             $servers = $this->getServerConfig(); // all the servers
         }
         if (0 == count($servers)) {
-            throw new Exception("No redis server available ! ");
+            throw new Exception('No redis server available ! ');
         }
         $idServer = $this->getServerId($key, $servers);
 
         if (!($redis = $this->getRedisFromServerConfig($idServer))) {
-            $this->notifyEvent('redis_host_on_error', array($idServer));
+            $this->notifyEvent('redis_host_on_error', [$idServer]);
             // find another server !!!
             unset($servers[$idServer]); // supress the server
 
@@ -369,6 +394,7 @@ abstract class Manager
 
     /**
      * buid a redis server with a config
+     *
      * @param string $idServer server id in the configuration
      *
      * @return object|false
@@ -406,6 +432,7 @@ abstract class Manager
      * return a Predis object
      *
      * @throws Exception
+     *
      * @return PredisProxy
      */
     protected function getNewRedis()
@@ -417,32 +444,33 @@ abstract class Manager
 
     /**
      * connecte un server
+     *
      * @param object|\Predis\Client $redis  \Predis\Client
      * @param array                 $server array('ip' => , 'port' => , 'timeout' =>)
      *
-     * @return boolean
+     * @return bool
      */
     protected function connectServer(PredisProxy $redis, $server)
     {
         try {
-            $redis->callRedisConstructor(array(
+            $redis->callRedisConstructor([
                 'host' => $server['ip'],
                 'port' => (int) $server['port'],
                 'timeout' => $this->getTimeout(),
-                'read_write_timeout' => $this->getReadWriteTimeout()
-                ));
-                // check if we are connected
+                'read_write_timeout' => $this->getReadWriteTimeout(),
+                ]);
+            // check if we are connected
             $redis->connect();
 
             return true;
         } catch (Predis\Connection\ConnectionException $e) {
             return false;
         }
-
     }
 
     /**
      * compress a string
+     *
      * @param string $data a data to compress
      *
      * @return string
@@ -454,6 +482,7 @@ abstract class Manager
 
     /**
      * uncompress a string
+     *
      * @param string $data data to uncompress
      *
      * @return string
@@ -463,7 +492,6 @@ abstract class Manager
         return gzuncompress($data);
     }
 
-
     /**
      * forget all server marker dead or alive
      *
@@ -471,8 +499,8 @@ abstract class Manager
      */
     public function forgetDeadOrAliveRedis()
     {
-        $this->deadRedis  = array();
-        $this->aliveRedis = array();
+        $this->deadRedis = [];
+        $this->aliveRedis = [];
 
         return $this;
     }

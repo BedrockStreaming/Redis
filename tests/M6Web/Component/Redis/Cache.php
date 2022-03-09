@@ -2,57 +2,56 @@
 /**
  * This class require a redis setuped on localhost
  */
+
 namespace M6Web\Component\Redis\tests\units;
 
 require_once __DIR__.'/CacheTest.php';
 
-use \mageekguy\atoum;
-use \M6Web\Component\Redis;
+use M6Web\Component\Redis;
 
 /**
  * test class
  */
-class Cache extends atoum\test
+class Cache extends \atoum
 {
+    public const SPACENAME = 'testCacheCache';
 
-    const SPACENAME = 'testCacheCache';
-
-    const TIMEOUT = 0.2;
+    public const TIMEOUT = 0.2;
 
     private function getServerConfig($config)
     {
         if ($config == 'one') {
-            return array(
-                'php50' => array (
+            return [
+                'php50' => [
                     'ip' => '127.0.0.1',
                     'port' => 6379,
-                    ));
+                    ], ];
         }
         if ($config == 'wrong') {
-            return array(
-                'phpraoul' => array (  // wrong server
+            return [
+                'phpraoul' => [  // wrong server
                     'ip' => '1.2.3.4',
                     'port' => 6379,
-                    ),
-                );
+                    ],
+                ];
         }
         if ($config == 'many') {
-            return array(
-                'php50' => array (
+            return [
+                'php50' => [
                     'ip' => '127.0.0.1',
                     'port' => 6379,
-                    ),
-                'phpraoul' => array (  // wrong server
+                    ],
+                'phpraoul' => [  // wrong server
                     'ip' => '1.2.3.4',
                     'port' => 6379,
-                    ),
-                'php51' => array (
+                    ],
+                'php51' => [
                     'ip' => '127.0.0.1',
                     'port' => 6379,
-                    )
-                );
+                    ],
+                ];
         }
-        throw new \Exception("one, many or wrong can be accessed via ".__METHOD__." not : ".$config);
+        throw new \Exception('one, many or wrong can be accessed via '.__METHOD__.' not : '.$config);
     }
 
     /**
@@ -65,11 +64,11 @@ class Cache extends atoum\test
     public function testGetServerId()
     {
         $server_config = $this->getServerConfig('many');
-        $redis = new Redis\CacheTest(array(
+        $redis = new Redis\CacheTest([
             'timeout' => self::TIMEOUT,
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME
-            ));
+            'namespace' => self::SPACENAME,
+            ]);
         $this->assert
             ->string($redis->MyGetServerId('raoul'))
             ->isEqualTo('php50');
@@ -81,32 +80,30 @@ class Cache extends atoum\test
             ->isEqualTo('php51');
     }
 
-
     public function testSimpleGet()
     {
         $server_config = $this->getServerConfig('one');
-        $redis = new Redis\Cache(array(
+        $redis = new Redis\Cache([
             'timeout' => self::TIMEOUT,
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME
-            ),
+            'namespace' => self::SPACENAME,
+            ],
              true
         );
 
         $this->assert
-            ->variable($redis->get(__METHOD__."rrrrr"))
+            ->variable($redis->get(__METHOD__.'rrrrr'))
             ->isNull();
     }
 
-
     public function manySetGetDataProvider()
     {
-         return array(
-            array('test', 'chuck'),
-            array('test', 'norris'),
-            array('fool', 'bar'),
-            array('fool', 'raoul')
-      );
+        return [
+            ['test', 'chuck'],
+            ['test', 'norris'],
+            ['fool', 'bar'],
+            ['fool', 'raoul'],
+      ];
     }
 
     /**
@@ -116,11 +113,11 @@ class Cache extends atoum\test
     public function testManySetGetPredis($foo, $bar)
     {
         $server_config = $this->getServerConfig('many');
-        $redis = new Redis\Cache(array(
+        $redis = new Redis\Cache([
             'timeout' => self::TIMEOUT,
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME
-            ),
+            'namespace' => self::SPACENAME,
+            ],
              true
         );
         // setting value
@@ -131,12 +128,12 @@ class Cache extends atoum\test
             ->isEqualTo($bar);
 
         // compressed
-        $redis = new redis\CacheTest(array(
+        $redis = new redis\CacheTest([
             'timeout' => self::TIMEOUT,
             'compress' => true,
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME
-            ),
+            'namespace' => self::SPACENAME,
+            ],
              true
         );
         // setting value
@@ -148,20 +145,20 @@ class Cache extends atoum\test
     }
 
     /**
-     *
      * @tags rand
      *
      * [getSetRedisPRedis description]
+     *
      * @return [type]
      */
     public function testGetSetRand()
     {
         $server_config = $this->getServerConfig('many');
-        $redis = new Redis\CacheTest(array(
+        $redis = new Redis\CacheTest([
             'timeout' => self::TIMEOUT,
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME
-            ));
+            'namespace' => self::SPACENAME,
+            ]);
         $rnd = rand(0, 1000);
         $this->assert
             ->object($redis->set('raoul', $rnd))
@@ -176,16 +173,17 @@ class Cache extends atoum\test
      * @tags noconnect
      *
      * test des trucs de base sur la conf
+     *
      * @return [type]
      */
     public function testConfig()
     {
         $server_config = $this->getServerConfig('many');
-        $redis = new Redis\CacheTest(array(
+        $redis = new Redis\CacheTest([
             'timeout' => self::TIMEOUT,
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME
-            ));
+            'namespace' => self::SPACENAME,
+            ]);
         $this->assert
             ->array($redis->getServerConfig())
             ->isEqualTo($server_config)
@@ -199,20 +197,20 @@ class Cache extends atoum\test
             ->isEqualTo(self::TIMEOUT);
 
         // without timeout
-        $redis = new redis\Cache(array(
+        $redis = new redis\Cache([
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME
-            ));
+            'namespace' => self::SPACENAME,
+            ]);
         $this->assert
             ->float($redis->getTimeout());
 
         // test with read write timeout
-        $redis = new redis\Cache(array(
+        $redis = new redis\Cache([
                 'server_config' => $server_config,
                 'namespace' => self::SPACENAME,
                 'timeout' => self::TIMEOUT,
-                'read_write_timeout' => self::TIMEOUT + 0.2
-            ));
+                'read_write_timeout' => self::TIMEOUT + 0.2,
+            ]);
         $this->assert
             ->float($redis->getReadWriteTimeout())
             ->isEqualTo($redis->getTimeout() + 0.2);
@@ -221,16 +219,17 @@ class Cache extends atoum\test
     /**
      * @tags phpredis
      * [testSetGetOneServer description]
+     *
      * @return void
      */
     public function testSetGetOneServer()
     {
         $server_config = $this->getServerConfig('one');
-        $redis = new Redis\CacheTest(array(
+        $redis = new Redis\CacheTest([
             'timeout' => self::TIMEOUT,
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME
-            ));
+            'namespace' => self::SPACENAME,
+            ]);
         $this->assert
             ->object($redis->set(__METHOD__.'foo', 'bar'));
         $this->assert
@@ -240,19 +239,20 @@ class Cache extends atoum\test
 
     /**
      * [testErrorSettingAValue description]
+     *
      * @return void
      */
     public function testErrorSettingAValue()
     {
         $server_config = $this->getServerConfig('wrong');
-        $redis = new Redis\CacheTest(array(
+        $redis = new Redis\CacheTest([
             'timeout' => self::TIMEOUT,
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME
-            ));
+            'namespace' => self::SPACENAME,
+            ]);
         $this->assert
             ->exception(
-                function() use ($redis) {
+                function () use ($redis) {
                     $redis->set('foo', 'bar');
                 })
             ->isInstanceOf('\M6Web\Component\Redis\Exception');
@@ -260,19 +260,20 @@ class Cache extends atoum\test
 
     /**
      * [testErrorSettingAValuePredis description]
+     *
      * @return void
      */
     public function testErrorSettingAValuePredis()
     {
         $server_config = $this->getServerConfig('wrong');
-        $redis = new Redis\Cache(array(
+        $redis = new Redis\Cache([
             'timeout' => self::TIMEOUT,
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME
-            ), 'predis', true);
+            'namespace' => self::SPACENAME,
+            ], 'predis', true);
         $this->assert
             ->exception(
-                function() use ($redis) {
+                function () use ($redis) {
                     $redis->set('foo', 'bar');
                 })
             ->isInstanceOf('\M6Web\Component\Redis\Exception');
@@ -281,16 +282,17 @@ class Cache extends atoum\test
     /**
      * @tags flush
      * [testCacheFlush description]
+     *
      * @return void
      */
     public function testCacheFlush()
     {
         $server_config = $this->getServerConfig('many');
-        $redis = new Redis\CacheTest(array(
+        $redis = new Redis\CacheTest([
             'timeout' => self::TIMEOUT,
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME.__METHOD__
-            ));
+            'namespace' => self::SPACENAME.__METHOD__,
+            ]);
         $this->assert
             ->object($redis->set('foo', 'tobeflushed'));
         $this->assert
@@ -314,16 +316,17 @@ class Cache extends atoum\test
     /**
      * @tags phpredis
      * [testNamespace description]
+     *
      * @return void
      */
     public function testNamespace()
     {
         $server_config = $this->getServerConfig('one');
-        $redis = new Redis\CacheTest(array(
+        $redis = new Redis\CacheTest([
             'timeout' => self::TIMEOUT,
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME.'1'
-            ));
+            'namespace' => self::SPACENAME.'1',
+            ]);
         $this->assert
             ->object($redis->set('foo', 'bar'));
         $this->assert
@@ -337,16 +340,17 @@ class Cache extends atoum\test
 
     /**
      * test expiration
+     *
      * @return void
      */
     public function testExpire()
     {
         $server_config = $this->getServerConfig('one');
-        $redis = new Redis\CacheTest(array(
+        $redis = new Redis\CacheTest([
             'timeout' => self::TIMEOUT,
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME.__METHOD__
-            ));
+            'namespace' => self::SPACENAME.__METHOD__,
+            ]);
         $this->assert
             ->object($redis->set('foo', 'tobeexpired', 5));
         $this->assert
@@ -361,11 +365,11 @@ class Cache extends atoum\test
     public function testExpireFunction()
     {
         $server_config = $this->getServerConfig('one');
-        $redis = new Redis\CacheTest(array(
+        $redis = new Redis\CacheTest([
             'timeout' => self::TIMEOUT,
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME.__METHOD__
-        ));
+            'namespace' => self::SPACENAME.__METHOD__,
+        ]);
 
         $this->assert
             ->exception(function () use ($redis) {
@@ -376,16 +380,17 @@ class Cache extends atoum\test
     /**
      * @tags watch
      * [watch description]
+     *
      * @return [type]
      */
     public function testWatch()
     {
         $server_config = $this->getServerConfig('one');
-        $redis = new Redis\Cache(array(
+        $redis = new Redis\Cache([
             'timeout' => self::TIMEOUT,
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME
-            ));
+            'namespace' => self::SPACENAME,
+            ]);
         $this->assert
         ->variable($redis->set('toto', 'tata'))
         ->variable($redis->watch('toto'))
@@ -398,6 +403,7 @@ class Cache extends atoum\test
      * @tags multi
      *
      * [multi description]
+     *
      * @return [type]
      */
     public function testMulti()
@@ -405,11 +411,11 @@ class Cache extends atoum\test
         // $this->enableDebug();
 
         $server_config = $this->getServerConfig('many');
-        $redis = new Redis\Cache(array(
+        $redis = new Redis\Cache([
             'timeout' => self::TIMEOUT,
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME.__METHOD__."v0.8.0"
-            ));
+            'namespace' => self::SPACENAME.__METHOD__.'v0.8.0',
+            ]);
         $redis->flush();
         $this->assert
             ->object($redis->multi()
@@ -445,7 +451,7 @@ class Cache extends atoum\test
             ->isEqualTo('bar3');
         $this->assert
             ->exception(
-                function() use ($redis) {
+                function () use ($redis) {
                     $redis->set('foo', 'bar')->exec();
                 })
             ->isInstanceOf('\M6Web\Component\Redis\Exception');
@@ -455,7 +461,7 @@ class Cache extends atoum\test
                 ->set('toto', 'bar')
                 ->set('toto2', 'bar2')
                 ->set('toto3', 'bar3'));
-           $this->assert
+        $this->assert
                   ->object($redis->discard());
         $this->assert->array(
                 $redis->multi()
@@ -471,7 +477,7 @@ class Cache extends atoum\test
         $this->assert
             ->array(
                 $redis->multi()
-                ->del(array('toto', 'toto2'))
+                ->del(['toto', 'toto2'])
                 ->del('toto3')
                 ->exec()
             )
@@ -481,22 +487,22 @@ class Cache extends atoum\test
             ->isEqualTo(false)
             ->boolean($redis->exists('toto3'))
             ->isEqualTo(false);
-
     }
 
     /**
      * @tags exists
      * [exists description]
+     *
      * @return void
      */
     public function testExists()
     {
         $server_config = $this->getServerConfig('one');
-        $redis = new Redis\Cache(array(
+        $redis = new Redis\Cache([
             'timeout' => self::TIMEOUT,
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME.__METHOD__
-            ));
+            'namespace' => self::SPACENAME.__METHOD__,
+            ]);
         $redis->set('foo', 'bar');
         $this->assert
             ->boolean($redis->exists('uneclequinexistepasetsielleexisteLOL'))
@@ -507,17 +513,18 @@ class Cache extends atoum\test
 
     /**
      * @tags del
+     *
      * @return void
      */
     public function testDel()
     {
         $server_config = $this->getServerConfig('many');
-        $redis = new Redis\Cache(array(
+        $redis = new Redis\Cache([
             'timeout' => self::TIMEOUT,
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME.__METHOD__
-            ));
-        //$redis->flush();
+            'namespace' => self::SPACENAME.__METHOD__,
+            ]);
+        // $redis->flush();
         $this->assert
             ->variable($redis->set('foo', 'kikoolol'))
             ->string($redis->get('foo'))
@@ -532,22 +539,23 @@ class Cache extends atoum\test
      * @tags incr
      *
      * [testIncr description]
+     *
      * @return void
      */
     public function testIncr()
     {
         $server_config = $this->getServerConfig('many');
-        $redis = new Redis\Cache(array(
+        $redis = new Redis\Cache([
             'timeout' => self::TIMEOUT,
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME.__METHOD__
-            ));
+            'namespace' => self::SPACENAME.__METHOD__,
+            ]);
         $redis->flush();
 
         $redis->set('foo', 'bar');
         $this->assert
              ->exception(
-                function() use ($redis) {
+                function () use ($redis) {
                     $redis->incr('foo');
                 })
              ->isInstanceOf('Predis\Response\ServerException');
@@ -574,21 +582,21 @@ class Cache extends atoum\test
                 );
         $this->assert->integer((int) $redis->get('chuck'))
             ->isEqualTo(4);
-
     }
 
     /**
      * testTtl feature
+     *
      * @return void
      */
     public function testTtl()
     {
         $server_config = $this->getServerConfig('one');
-        $redis = new Redis\Cache(array(
+        $redis = new Redis\Cache([
             'timeout' => self::TIMEOUT,
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME.__METHOD__
-            ));
+            'namespace' => self::SPACENAME.__METHOD__,
+            ]);
         $redis->set('foo', 'bar', 10);
         $this->assert
             ->integer($redis->ttl('foo'))
@@ -604,11 +612,11 @@ class Cache extends atoum\test
     public function testType()
     {
         $serverConfig = $this->getServerConfig('one');
-        $redis = new Redis\Cache(array(
+        $redis = new Redis\Cache([
             'timeout' => self::TIMEOUT,
             'server_config' => $serverConfig,
-            'namespace' => self::SPACENAME.__METHOD__
-        ));
+            'namespace' => self::SPACENAME.__METHOD__,
+        ]);
         $redis->set('foo', 'bar', 10);
 
         $this
@@ -619,7 +627,6 @@ class Cache extends atoum\test
             ->isEqualTo('none');
 
         $redis->set('foo', 42, 10);
-
     }
 
     /**
@@ -630,11 +637,11 @@ class Cache extends atoum\test
     public function testInfo()
     {
         $serverConfig = $this->getServerConfig('one');
-        $redis = new Redis\Cache(array(
+        $redis = new Redis\Cache([
             'timeout' => self::TIMEOUT,
             'server_config' => $serverConfig,
-            'namespace' => self::SPACENAME.__METHOD__
-        ));
+            'namespace' => self::SPACENAME.__METHOD__,
+        ]);
         $redis->set('foo', 'bar', 10);
 
         $keysConfig = array_keys($serverConfig);
@@ -645,7 +652,7 @@ class Cache extends atoum\test
             ->array($info = $redis->info())
             ->hasKey($keyConfig)
             ->array($info[$keyConfig])
-            ->hasKeys(array('Server', 'Memory', 'Clients'));
+            ->hasKeys(['Server', 'Memory', 'Clients']);
     }
 
     /**
@@ -656,11 +663,11 @@ class Cache extends atoum\test
     public function testDbsize()
     {
         $serverConfig = $this->getServerConfig('one');
-        $redis = new Redis\Cache(array(
+        $redis = new Redis\Cache([
             'timeout' => self::TIMEOUT,
             'server_config' => $serverConfig,
-            'namespace' => self::SPACENAME.__METHOD__
-        ));
+            'namespace' => self::SPACENAME.__METHOD__,
+        ]);
         $redis->set('foo', 'bar', 10);
 
         $keysConfig = array_keys($serverConfig);
@@ -676,11 +683,11 @@ class Cache extends atoum\test
     public function testHashing()
     {
         $server_config = $this->getServerConfig('many');
-        $redis = new Redis\CacheTest(array(
+        $redis = new Redis\CacheTest([
             'timeout' => self::TIMEOUT,
             'server_config' => $server_config,
-            'namespace' => self::SPACENAME.__METHOD__
-        ));
+            'namespace' => self::SPACENAME.__METHOD__,
+        ]);
 
         $this
             ->assert
@@ -699,5 +706,4 @@ class Cache extends atoum\test
             ->hasSize(1)
         ;
     }
-
 }
